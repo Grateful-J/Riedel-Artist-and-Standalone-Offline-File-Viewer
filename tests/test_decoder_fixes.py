@@ -6,6 +6,7 @@ Run from the repository root:  python -I -m unittest discover -s tests -t .
 import pathlib
 import sys
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
@@ -15,6 +16,36 @@ import artist_reader as A  # noqa: E402
 BOLERO = 0x440          # Bolero Wireless Beltpack (PORT_TYPE_NAMES)
 RSP_1232HL = 0x505      # RSP-1232HL panel
 PANEL_KEYS = 64         # stored slots on a 32-key panel (two slots per key)
+
+
+class FakeReader:
+    """Scripted stand-in for the binary reader: only the calls read_card_sic_dante makes."""
+
+    def __init__(self, version, string, byte):
+        self.version = version
+        self._string, self._byte = string, byte
+
+    def string(self):
+        return self._string
+
+    def u8(self):
+        return self._byte
+
+
+def fake_sic_base(ar, o):
+    """Stands in for read_sic_base: it stores AllocatedPorts (+0x90) the way the real reader does."""
+    o['sic_u16b'] = 4
+    o['allocated_ports'] = 4
+
+
+class DanteCardTests(unittest.TestCase):
+
+    def test_dante_byte_does_not_overwrite_allocated_ports(self):
+        o = {}
+        with mock.patch.object(A, 'read_sic_base', fake_sic_base):
+            A.read_card_sic_dante(FakeReader(0x4d0, 'dante', 16), o)
+        self.assertEqual(o['allocated_ports'], 4)
+        self.assertEqual(o['dante_u8'], 16)
 
 
 class KeyNumberTests(unittest.TestCase):

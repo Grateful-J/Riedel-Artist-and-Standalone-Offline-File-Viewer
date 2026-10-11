@@ -527,7 +527,9 @@ def read_card_sic_dante(ar, o):
     read_sic_base(ar, o)
     o['dante_name'] = ar.string()
     if ar.version >= 0x4d0:
-        o['allocated_ports'] = o['dante_u8'] = ar.u8()
+        # One byte after the name; its meaning is unknown, so it is kept as dante_u8 only. It must not replace
+        # allocated_ports, which read_sic_base already set from +0x90 (AllocatedPorts).
+        o['dante_u8'] = ar.u8()
 
 
 # ----- key commands (CPhysCommand subclasses) -------------------------------------------------
