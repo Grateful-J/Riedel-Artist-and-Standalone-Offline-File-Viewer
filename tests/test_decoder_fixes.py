@@ -48,6 +48,27 @@ class DanteCardTests(unittest.TestCase):
         self.assertEqual(o['dante_u8'], 16)
 
 
+class PortGainTests(unittest.TestCase):
+
+    def test_input_only_ports_have_no_output_gain(self):
+        for cls in (0x401, 0x441):                       # 2-Wire Input, Input (Dante)
+            self.assertEqual(A.port_gains(cls, -3.0, 2.0), (-3.0, None), hex(cls))
+
+    def test_output_only_ports_have_no_input_gain(self):
+        for cls in (0x402, 0x442):                       # 2-Wire Output, Output (Dante)
+            self.assertEqual(A.port_gains(cls, -3.0, 2.0), (None, 2.0), hex(cls))
+
+    def test_4_wire_and_bolero_have_both_gains(self):
+        for cls in (0x403, 0x440):                       # 4-Wire, Bolero Wireless Beltpack
+            self.assertEqual(A.port_gains(cls, -3.0, 2.0), (-3.0, 2.0), hex(cls))
+
+    def test_rsp_1232hl_panel_has_neither_gain(self):
+        self.assertEqual(A.port_gains(RSP_1232HL, -3.0, 2.0), (None, None))
+
+    def test_unconfirmed_class_keeps_both_gains(self):
+        self.assertEqual(A.port_gains(0x506, -3.0, 2.0), (-3.0, 2.0))   # RSP-1216HL, not in the export
+
+
 class KeyNumberTests(unittest.TestCase):
 
     def test_bolero_slots_0_to_5_are_keys_1_to_6(self):

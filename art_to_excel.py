@@ -571,8 +571,8 @@ def sheet_ports(wb, ctx):
             panel_cols = list(settings.keys())
         rows.append((p, [ps[1] if len(ps) > 1 else '', p.get('name'), p.get('port_str'), p.get('alias'),
                          p.get('port_str2'), ptype, node_bay, p.get('trunk_address'),
-                         '%+.1f dB' % p['input_gain_db'] if 'input_gain_db' in p else '',
-                         '%+.1f dB' % p['output_gain_db'] if 'output_gain_db' in p else '',
+                         '%+.1f dB' % p['input_gain_db'] if p.get('input_gain_db') is not None else '',
+                         '%+.1f dB' % p['output_gain_db'] if p.get('output_gain_db') is not None else '',
                          A.room_code_label(p.get('room_code')), p.get('room_mode'), p.get('second_audio_channel'),
                          p.get('keypad_shortcut'), p.get('media_interface'), ctx.name(p.get('phone_book')),
                          ', '.join(ctx.name(s) for s in p.get('scroll_lists') or [] if s not in NO_REF),
