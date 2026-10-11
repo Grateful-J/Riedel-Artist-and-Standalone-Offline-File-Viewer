@@ -174,7 +174,7 @@ class Ctx:
 
     def key_place(self, k):
         n = self.key_counts_cache().get(k['holder'], 0)
-        key_no, bank = key_number(k['slot'], n, self.byid[k['holder']]['class'])
+        key_no, bank = key_number(k['slot'], n, self.byid.get(k['holder'], {}).get('class'))
         return '%s, %s%s' % (self.name(k['holder']), key_text(key_no), '' if bank == 1 else ' (bank %d)' % bank)
 
     _kc = None
@@ -188,8 +188,8 @@ class Ctx:
 def key_number(slot, slots_on_holder, holder_class):
     """Stored slot -> (key number, bank). holder_class is the holder's port class (PORT_TYPE_NAMES).
 
-    Bolero beltpacks (0x440): slots 0-5 are keys 1-6 and slot 6 is Reply (docs/FORMAT_NOTES.md 3.6; slot 0 = key 1
-    and slot 1 = key 2 confirmed by Director's show designer). Slots 7-9 have no confirmed meaning, so they are
+    Bolero beltpacks (0x440): slots 0-5 are keys 1-6 and slot 6 is Reply (docs/FORMAT_NOTES.md; slot 0 = key 1
+    and slot 1 = key 2 confirmed with a test save). Slots 7-9 have no confirmed meaning, so they are
     shown by slot only ('slot 8').
 
     Panels store two slots per key (key count = slots / 2, matching every confirmed panel); the lower half holds
@@ -597,7 +597,7 @@ def sheet_keys(wb, ctx):
         cmds = [ctx.byid[c] for c in k.get('commands') or [] if c in ctx.byid]
         if not cmds and not k.get('label'):
             continue                                     # empty key slot
-        key_no, bank = key_number(k['slot'], counts.get(k['holder'], 0), ctx.byid[k['holder']]['class'])
+        key_no, bank = key_number(k['slot'], counts.get(k['holder'], 0), ctx.byid.get(k['holder'], {}).get('class'))
         fns = ' | '.join('%s: %s' % (f, t) if t else f for f, t, _ in (describe_command(c, ctx) for c in cmds))
         per_holder[k['holder']][(bank, key_no)] = (k.get('label'), k.get('mode'), fns or '(no function)')
     positions = sorted({pos for keys in per_holder.values() for pos in keys}, key=key_sort)
@@ -645,7 +645,7 @@ def sheet_key_details(wb, ctx):
     counts = ctx.key_counts_cache()
     rows, funcs = [], []
     for k in sorted(ctx.keys, key=lambda k: (ctx.name(k['holder']), k['slot'])):
-        key_no, bank = key_number(k['slot'], counts.get(k['holder'], 0), ctx.byid[k['holder']]['class'])
+        key_no, bank = key_number(k['slot'], counts.get(k['holder'], 0), ctx.byid.get(k['holder'], {}).get('class'))
         cmds = [ctx.byid[c] for c in k.get('commands') or [] if c in ctx.byid]
         desc = [describe_command(c, ctx) for c in cmds]
         if not cmds and not k.get('label'):
@@ -838,7 +838,7 @@ def resource_counts(ctx):
         except Exception:
             model = 'class 0x%x' % c['class']
         cnt[('Controllers', model + ' (Artist 1024 controller)') if c['class'] == 0x10c else ('Cards', model)] += 1
-    key_classes = {ctx.byid[k['holder']]['class'] for k in ctx.keys if k['holder'] in ctx.byid}
+    key_classes = {ctx.byid.get(k['holder'], {}).get('class') for k in ctx.keys if k['holder'] in ctx.byid}
     for p in ctx.ports:
         try:
             typ = A.port_type(p, ctx.byid)

@@ -1447,6 +1447,8 @@ def port_gains(cls, input_db, output_db):
     """(input gain, output gain) in dB as Director shows them: None where the port class has no such direction."""
     has_in, has_out = GAIN_DIRECTIONS.get(cls, (True, True))
     return (input_db if has_in else None), (output_db if has_out else None)
+
+
 CARD_INTERFACE = {0x101: 'AES', 0x103: 'AIO', 0x109: 'AES67', 0x10b: 'AES67', 0x10a: 'Dante', 0x10f: 'Dante'}
 
 
