@@ -1,0 +1,42 @@
+"""Regression tests for key numbering, Dante allocation and port gain applicability.
+
+All inputs are synthetic: class codes are protocol constants, and no show data is used.
+Run from the repository root:  python -I -m unittest discover -s tests -t .
+"""
+import pathlib
+import sys
+import unittest
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+
+import art_to_excel as X  # noqa: E402
+import artist_reader as A  # noqa: E402
+
+BOLERO = 0x440          # Bolero Wireless Beltpack (PORT_TYPE_NAMES)
+RSP_1232HL = 0x505      # RSP-1232HL panel
+PANEL_KEYS = 64         # stored slots on a 32-key panel (two slots per key)
+
+
+class KeyNumberTests(unittest.TestCase):
+
+    def test_bolero_slots_0_to_5_are_keys_1_to_6(self):
+        for slot in range(6):
+            self.assertEqual(X.key_number(slot, 10, BOLERO), (slot + 1, 1), slot)
+
+    def test_bolero_slot_6_is_reply(self):
+        self.assertEqual(X.key_number(6, 10, BOLERO), ('Reply', 1))
+
+    def test_bolero_slots_7_to_9_are_shown_by_slot_only(self):
+        # Meaning of these slots is unconfirmed, so they carry no key number.
+        self.assertEqual(X.key_number(8, 10, BOLERO), ('slot 8', 1))
+
+    def test_panel_lower_half_is_bank_1(self):
+        self.assertEqual(X.key_number(0, PANEL_KEYS, RSP_1232HL), (1, 1))
+        self.assertEqual(X.key_number(31, PANEL_KEYS, RSP_1232HL), (32, 1))
+
+    def test_panel_upper_half_is_bank_2(self):
+        self.assertEqual(X.key_number(32, PANEL_KEYS, RSP_1232HL), (1, 2))
+
+
+if __name__ == '__main__':
+    unittest.main()
